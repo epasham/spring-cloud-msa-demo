@@ -30,8 +30,55 @@ services:
       
       
       
+  elasticsearch:
+    image: elasticsearch
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      MAX_OPEN_FILES: 65536
+    ulimits:
+      nofile:
+          soft: 65536
+          hard: 65536
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - msa-net
       
+  logstash:
+    image: logstash
+    depends_on:
+      - elasticsearch
+    command: logstash -e 'input {
+                            tcp {
+                              port => 5000
+                              codec => json_lines
+                            }
+                          }
+                          output {
+                            elasticsearch { hosts => "elasticsearch:9200" }
+                            stdout { codec => rubydebug }
+                          }'
+    ports:
+      - "5000:5000"
+    links:
+      - elasticsearch
+    networks:
+      - msa-net
       
+  kibana:
+    image: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    links:
+      - elasticsearch
+    networks:
+      - msa-net
+    depends_on:
+      - elasticsearch
+      - logstash      
       
 networks:
   msa-net:
