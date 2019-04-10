@@ -1,0 +1,38 @@
+server:
+  port: 8888
+
+management:
+  security:
+    enabled: false
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    include: native # required to use native search-paths
+  cloud:
+    bus:
+      enabled: true
+    config:
+      server:
+        native:
+          search-locations: file:/config-repo
+        # git:
+        #   uri: https://github.com/epasham/cloud-config-repo.git
+        #   search-paths: config/config-repo        
+  rabbitmq:
+    host: localhost
+    port: 5672    
+    
+security:
+  user:
+    name: cfgadmin
+    password: password
+    role: SYSTEM
+
+---
+spring:
+  profiles: docker
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
